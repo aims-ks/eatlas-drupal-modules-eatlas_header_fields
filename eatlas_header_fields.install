@@ -1,0 +1,119 @@
+<?php
+
+include_once 'eatlas_header_fields_constants.php';
+
+/**
+ * Implements hook_uninstall().
+ *     https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_uninstall/7
+ */
+function eatlas_header_fields_uninstall() {
+    field_delete_field(EATLAS_HEADER_FIELDS_FIELD_LIBRARIES);
+    field_delete_field(EATLAS_HEADER_FIELDS_FIELD_CUSTOM_JS);
+    field_delete_field(EATLAS_HEADER_FIELDS_FIELD_CUSTOM_CSS);
+}
+
+/**
+ * Implements hook_install().
+ *   https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_install/7
+ */
+function eatlas_header_fields_install() {
+    _eatlas_header_fields_create_fields();
+}
+
+// Create the fields.
+// Field API reference:
+//     https://api.drupal.org/api/drupal/modules!field!field.module/group/field/7
+// Form API reference:
+//     https://api.drupal.org/api/drupal/developer!topics!forms_api_reference.html/7
+// List of type / widgets
+//     https://groups.drupal.org/node/124289
+function _eatlas_header_fields_create_fields() {
+
+    _eatlas_header_fields_create_field(array(
+        'field_name' => EATLAS_HEADER_FIELDS_FIELD_LIBRARIES,
+        'type' => 'list_text',
+        'label' => 'JavaScript libraries',
+        'description' => 'List of JavaScript libraries used by this page. New libraries can be installed into the libraries directory with appropriate <a href="https://www.drupal.org/docs/7/modules/libraries-api-7x/using-libraries-api-2x-as-a-module-developer#s-using-an-info-file">.libraries.info file</a>. Use CTRL to select multiple.',
+        'required' => FALSE,
+        'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+
+        'settings'    => array(
+            'allowed_values_function' => '_eatlas_header_fields_get_libraries_options'
+        ),
+        'widget' => array(
+            'type' => 'options_select' //'options_buttons' //'options_select' // Select list
+        ),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden'
+            )
+        )
+    ));
+    _eatlas_header_fields_create_field(array(
+        'field_name' => EATLAS_HEADER_FIELDS_FIELD_CUSTOM_JS,
+        'type' => 'text_long',
+        'label' => 'Custom JavaScript',
+        'description' => 'Custom JavaScript executed when the page is loaded, used for this node only.',
+        'required' => FALSE,
+
+//        'settings' => array(
+//            'max_length' => ''
+//        ),
+        'widget' => array(
+            'type' => 'text_textarea'
+        ),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden'
+            )
+        )
+    ));
+    _eatlas_header_fields_create_field(array(
+        'field_name' => EATLAS_HEADER_FIELDS_FIELD_CUSTOM_CSS,
+        'type' => 'text_long',
+        'label' => 'Custom CSS',
+        'description' => 'Custom CSS used for this node only.',
+        'required' => FALSE,
+
+        'widget' => array(
+            'type' => 'text_textarea'
+        ),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden'
+            )
+        )
+    ));
+}
+
+// Create a field (if it do not already exists)
+// Field info API
+//     https://api.drupal.org/api/drupal/modules%21field%21field.info.inc/7
+// Field crud API (create, update, delete, etc)
+//     https://api.drupal.org/api/drupal/modules%21field%21field.crud.inc/7
+// Field data structure API
+//     https://api.drupal.org/api/drupal/modules%21field%21field.module/group/field/7
+function _eatlas_header_fields_create_field($field_config) {
+    $field_name = $field_config['field_name'];
+
+    $field = field_info_field($field_name);
+    // If the field do not exists
+    if (!$field) {
+        $field = field_create_field($field_config);
+        watchdog('eatlas_header_fields', 'Field "'.$field_name.'" created');
+    } else {
+        watchdog('eatlas_header_fields', 'Field "'.$field_name.'" already exists');
+    }
+
+    // It seems like a field can't exists in the system without been associated with at least one content type...
+    $content_type_id = 'article';
+    $instance = field_info_instance('node', $field_name, $content_type_id);
+    if (!$instance) {
+        $field_instance_def = $field_config;
+        $field_instance_def['entity_type'] = 'node';
+        $field_instance_def['bundle'] = $content_type_id;
+        // https://api.drupal.org/api/drupal/modules%21field%21field.crud.inc/function/field_create_instance/7.x
+        field_create_instance($field_instance_def);
+        watchdog('eatlas_header_fields', 'Field "'.$field_name.'" added to "'.$content_type_id.'".');
+    }
+}

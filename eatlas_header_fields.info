@@ -1,0 +1,17 @@
+; $Id$
+name = eAtlas header fields
+description = Define a special fields that adds JavaScript libraries, custom JavaScript code and custom CSS to the header of the page.
+core = 7.x
+
+files[] = eatlas_header_fields.module
+
+package = eAtlas
+
+dependencies[] = eatlas_commons (>=1.4)
+dependencies[] = libraries
+
+; Attributes used by the update module.
+; There fields needs to be removed if the module is migrated to Drupal.org
+project status url = "http://drupal.eatlas.org.au/modules/eatlas"
+version = "7.x-0.1"
+project = "eatlas_header_fields"

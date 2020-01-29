@@ -1,0 +1,137 @@
+<?php
+
+include_once 'eatlas_header_fields_constants.php';
+
+/**
+ * Implements: hook_html_head_alter().
+ * Add JavaScript libraries, custom JS and custom CSS to the page header.
+ */
+function eatlas_header_fields_html_head_alter(&$head_elements) {
+    // Only render custom CSS and JS when on view mode
+    // NOTE: If someone input broken JS, the page needs to still be editable
+    //     therefore the JS should never apply on edit mode.
+    $page_mode = arg(2);
+    $view_mode = $page_mode == "" || $page_mode == 'view';
+
+    if ($view_mode) {
+        // Load the current node (or file)
+        // NOTE: Some page have no type (such as setting pages when display with overlay)
+        $entity_type = _eatlas_header_fields_get_page_entity_type();
+        if ($entity_type) {
+            $entity = _eatlas_header_fields_get_page_entity($entity_type);
+
+            // Useful for debugging
+            //watchdog('eatlas_header_fields', 'TYPE ['.$entity_type.']: <pre>'.print_r((array)$entity, TRUE).'</pre>');
+
+            if ($entity) {
+                $entity_id = NULL;
+                $entity_url = NULL;
+                if ($entity_type === 'node' && property_exists($entity, 'nid')) {
+                    $entity_id = $entity->nid;
+                    $entity_url = url('node/' . $entity_id);
+                } else if (($entity_type === 'file' || $entity_type === 'media') && property_exists($entity, 'fid')) {
+                    $entity_id = $entity->fid;
+                    $entity_url = url('media/' . $entity_id);
+                }
+
+                if ($entity_id !== NULL) {
+                    if ($entity && property_exists($entity, EATLAS_HEADER_FIELDS_FIELD_LIBRARIES)) {
+                        $js_libs = eatlas_commons_get_entity_value($entity_type, $entity, EATLAS_HEADER_FIELDS_FIELD_LIBRARIES);
+
+                        if ($js_libs) {
+                            foreach($js_libs as $js_lib_id) {
+                                // Load the library (JS files, CSS files, etc)
+                                //     https://www.drupal.org/project/libraries
+                                $js_lib_obj = libraries_load($js_lib_id);
+
+                                if (empty($js_lib_obj['loaded'])) {
+                                    watchdog('eatlas_header_fields', 'Could not load library @lib_id for !link',
+                                        array(
+                                            '@lib_id' => $js_lib_id,
+                                            '!link' => '<a href="'.$entity_url.'" target="_blank">' . $entity_type . ' ID ' . $entity_id . '</a>'
+                                        ),
+                                        WATCHDOG_WARNING);
+                                }
+                            }
+                        }
+                    }
+
+                    if ($entity && property_exists($entity, EATLAS_HEADER_FIELDS_FIELD_CUSTOM_JS)) {
+                        $custom_js = eatlas_commons_get_entity_value($entity_type, $entity, EATLAS_HEADER_FIELDS_FIELD_CUSTOM_JS);
+
+                        if ($custom_js) {
+                            // https://api.drupal.org/api/drupal/includes%21common.inc/function/drupal_add_js/7.x
+                            drupal_add_js(
+                                "jQuery(document).ready(function() {" . $custom_js . "});",
+                                array(
+                                    'type' => 'inline',
+                                    'group' => 1000 // Executed at the end, after theme JS
+                                )
+                            );
+                        }
+                    }
+
+                    if ($entity && property_exists($entity, EATLAS_HEADER_FIELDS_FIELD_CUSTOM_CSS)) {
+                        $custom_css = eatlas_commons_get_entity_value($entity_type, $entity, EATLAS_HEADER_FIELDS_FIELD_CUSTOM_CSS);
+
+                        if ($custom_css) {
+                            // https://api.drupal.org/api/drupal/includes%21common.inc/function/drupal_add_css/7.x
+                            drupal_add_css(
+                                $custom_css,
+                                array(
+                                    'type' => 'inline',
+                                    'group' => 1000 // Applied at the end, after theme CSS
+                                )
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Return the entity type of the given path, or the current page if the
+ * path is NULL.
+ * The entity type is either "node", "file", "taxonomy", "user", etc.
+ */
+function _eatlas_header_fields_get_page_entity_type($path = NULL) {
+    // https://api.drupal.org/api/drupal/includes%21bootstrap.inc/function/arg/7
+    $entity_type = arg(0, $path);
+    if ($entity_type === 'media') {
+        $entity_type = 'file';
+    }
+    return (entity_get_info($entity_type) === NULL ? NULL : $entity_type);
+}
+function _eatlas_header_fields_get_page_entity($entity_type, $path = NULL) {
+    if ($entity_type == NULL) {
+        return NULL;
+    }
+    // https://api.drupal.org/api/drupal/includes%21menu.inc/function/menu_get_object/7
+    return menu_get_object($entity_type, 1, $path);
+}
+
+/**
+ * Used to populate the list of libraries
+ * for field EATLAS_HEADER_FIELDS_FIELD_LIBRARIES
+ * @return array
+ */
+function _eatlas_header_fields_get_libraries_options() {
+    $libraries_options = array();
+
+    // https://www.drupal.org/project/libraries
+    $libraries = libraries_get_libraries();
+    if ($libraries) {
+        //watchdog('eatlas_header_fields', '<pre>'.print_r($libraries, true).'</pre>');
+        foreach($libraries as $lib_id => $path) {
+            $lib_obj = libraries_detect($lib_id);
+            if ($lib_obj) {
+                $libraries_options[$lib_id] = $lib_obj['description'];
+            }
+        }
+        natsort($libraries_options);
+    }
+
+    return $libraries_options;
+}
