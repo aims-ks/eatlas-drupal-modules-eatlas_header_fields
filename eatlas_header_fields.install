@@ -33,7 +33,7 @@ function _eatlas_header_fields_create_fields() {
         'field_name' => EATLAS_HEADER_FIELDS_FIELD_LIBRARIES,
         'type' => 'list_text',
         'label' => 'JavaScript libraries',
-        'description' => 'List of JavaScript libraries used by this page. New libraries can be installed into the libraries directory with appropriate <a href="https://www.drupal.org/docs/7/modules/libraries-api-7x/using-libraries-api-2x-as-a-module-developer#s-using-an-info-file">.libraries.info file</a>. Use CTRL to select multiple.',
+        'description' => 'List of JavaScript libraries used by this page. New libraries can be installed into the libraries directory with appropriate <a href="https://www.drupal.org/docs/7/modules/libraries-api-7x/using-libraries-api-2x-as-a-module-developer#s-using-an-info-file" target="_blank">.libraries.info file</a>. Use CTRL to select multiple.',
         'required' => FALSE,
         'cardinality' => FIELD_CARDINALITY_UNLIMITED,
 
