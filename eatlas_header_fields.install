@@ -53,12 +53,9 @@ function _eatlas_header_fields_create_fields() {
         'field_name' => EATLAS_HEADER_FIELDS_FIELD_CUSTOM_JS,
         'type' => 'text_long',
         'label' => 'Custom JavaScript',
-        'description' => 'Custom JavaScript executed when the page is loaded, used for this node only.',
+        'description' => 'Custom JavaScript, used for this node only.',
         'required' => FALSE,
 
-//        'settings' => array(
-//            'max_length' => ''
-//        ),
         'widget' => array(
             'type' => 'text_textarea'
         ),

@@ -61,13 +61,10 @@ function eatlas_header_fields_html_head_alter(&$head_elements) {
 
                         if ($custom_js) {
                             // https://api.drupal.org/api/drupal/includes%21common.inc/function/drupal_add_js/7.x
-                            drupal_add_js(
-                                "jQuery(document).ready(function() {" . $custom_js . "});",
-                                array(
-                                    'type' => 'inline',
-                                    'group' => 1000 // Executed at the end, after theme JS
-                                )
-                            );
+                            drupal_add_js($custom_js, array(
+                                'type' => 'inline',
+                                'group' => 1000 // Executed at the end, after theme JS
+                            ));
                         }
                     }
 
@@ -76,13 +73,10 @@ function eatlas_header_fields_html_head_alter(&$head_elements) {
 
                         if ($custom_css) {
                             // https://api.drupal.org/api/drupal/includes%21common.inc/function/drupal_add_css/7.x
-                            drupal_add_css(
-                                $custom_css,
-                                array(
-                                    'type' => 'inline',
-                                    'group' => 1000 // Applied at the end, after theme CSS
-                                )
-                            );
+                            drupal_add_css($custom_css, array(
+                                'type' => 'inline',
+                                'group' => 1000 // Applied at the end, after theme CSS
+                            ));
                         }
                     }
                 }
