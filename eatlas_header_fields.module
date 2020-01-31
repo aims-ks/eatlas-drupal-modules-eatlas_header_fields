@@ -121,7 +121,7 @@ function _eatlas_header_fields_get_libraries_options() {
         foreach($libraries as $lib_id => $path) {
             $lib_obj = libraries_detect($lib_id);
             if ($lib_obj) {
-                $libraries_options[$lib_id] = $lib_obj['description'];
+                $libraries_options[$lib_id] = $lib_obj['name'];
             }
         }
         natsort($libraries_options);
